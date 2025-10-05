@@ -61,6 +61,7 @@ link_directories(${CMAKE_SOURCE_DIR}/include/glut/lib)
 # Exercícios/fontes do projeto
 set(EXERCISES
     Game/main
+    HelloSprites/HelloSprites  # Só um alvo agora: HelloSprites
 )
 
 add_compile_options(-Wno-pragmas)
@@ -86,12 +87,21 @@ endif()
 foreach(EXERCISE ${EXERCISES})
     get_filename_component(EXE_NAME ${EXERCISE} NAME)
 
-    add_executable(${EXE_NAME} src/${EXERCISE}.cpp ${GLAD_C_FILE})
+    # Para HelloSprites, adicione explicitamente Sprite.cpp + glad.c
+    if(EXE_NAME STREQUAL "HelloSprites")
+        add_executable(${EXE_NAME}
+            src/${EXERCISE}.cpp          # HelloSprites.cpp
+            src/HelloSprites/Sprite.cpp  # <-- Implementação da classe!
+            ${GLAD_C_FILE}               # GLAD
+        )
+    else()
+        add_executable(${EXE_NAME} src/${EXERCISE}.cpp ${GLAD_C_FILE})
+    endif()
 
     target_include_directories(${EXE_NAME} PRIVATE 
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/include/glad
-       # ${CMAKE_SOURCE_DIR}/include/glut/include   # ✅ GL/glut.h
+        ${CMAKE_SOURCE_DIR}/include/glut/include/GL  # Se precisar do GLUT
         ${glm_SOURCE_DIR}
         ${stb_image_SOURCE_DIR}
     )
@@ -100,8 +110,6 @@ foreach(EXERCISE ${EXERCISES})
         glfw
         ${OPENGL_LIBS}
         glm::glm
-        #glut            # ✅ Para Windows
-        # glut            # ✅ Para Linux (use esta se for Linux)
-        # freeglut        # Ou use freeglut, se for o nome da lib instalada
+        # Descomente se precisar: glut  # Para Windows/Linux
     )
 endforeach()

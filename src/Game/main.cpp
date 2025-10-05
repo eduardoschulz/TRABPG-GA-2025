@@ -7,7 +7,7 @@
 #include <sstream> 
 #include "stb_easy_font.h"
 
-
+// Função para renderizar texto do Score usando stb_easy_font (que é puxada pelo cmake)
 void renderText(float x, float y, const std::string& text) {
     static char buffer[99999]; // Capacidade para ~500 caracteres
     int num_quads = stb_easy_font_print(x, y, (char*)text.c_str(), nullptr, buffer, sizeof(buffer));
@@ -103,8 +103,6 @@ int main() {
     glOrtho(0, WIDTH, HEIGHT, 0, -1, 1);  // Corrige coordenadas
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();   
-
-
 
     while (!glfwWindowShouldClose(window)) {
         float currentTime = glfwGetTime();
