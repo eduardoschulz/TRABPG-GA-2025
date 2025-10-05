@@ -60,7 +60,7 @@ link_directories(${CMAKE_SOURCE_DIR}/include/glut/lib)
 
 # Exercícios/fontes do projeto
 set(EXERCISES
-    Game/main.cpp
+    Game/main
 )
 
 add_compile_options(-Wno-pragmas)
