@@ -1,32 +1,22 @@
 cmake_minimum_required(VERSION 3.11...4.0)
 project(FCG2025-1)
 
-# Define o padrão do C++
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Ativa o FetchContent
+
 include(FetchContent)
 
-# Baixa GLFW automaticamente
+
 FetchContent_Declare(
   glfw
   GIT_REPOSITORY https://github.com/glfw/glfw.git
   GIT_TAG master
 )
-
 FetchContent_MakeAvailable(glfw)
 
-FetchContent_Declare(
-  stb_image
-  GIT_REPOSITORY https://github.com/nothings/stb.git
-  GIT_TAG master
-)
-FetchContent_MakeAvailable(stb_image)
-include_directories(${stb_image_SOURCE_DIR})
 
-
-# Baixa GLM automaticamente
 FetchContent_Declare(
   glm
   GIT_REPOSITORY https://github.com/g-truc/glm.git
@@ -34,39 +24,37 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glm)
 
-# Baixa stb_image automaticamente
+
 FetchContent_Declare(
   stb_image
   GIT_REPOSITORY https://github.com/nothings/stb.git
   GIT_TAG master
 )
 FetchContent_MakeAvailable(stb_image)
+include_directories(${stb_image_SOURCE_DIR})
 
-# Pastas de includes
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/common)
 include_directories(${CMAKE_SOURCE_DIR}/include/glad)
+include_directories(${CMAKE_SOURCE_DIR}/include/glut/include/GL)
 include_directories(${glm_SOURCE_DIR})
 include_directories(${stb_image_SOURCE_DIR})
 
-# 👉 Inclui o caminho correto para o glut.h local:
-# include/glut/include/GL/glut.h
-include_directories(${CMAKE_SOURCE_DIR}/include/glut/include/GL)
 
-
-# Se necessário, adicione também a pasta de libs do GLUT
-# Ex: include/glut/lib/libglut.a ou glut32.lib
 link_directories(${CMAKE_SOURCE_DIR}/include/glut/lib)
 
-# Exercícios/fontes do projeto
-set(EXERCISES
-    Game/main
-    HelloSprites/HelloSprites  # Só um alvo agora: HelloSprites
-)
 
 add_compile_options(-Wno-pragmas)
 
-# Detecta bibliotecas do OpenGL por SO
+
+set(GLAD_C_FILE "${CMAKE_SOURCE_DIR}/common/glad.c")
+if (NOT EXISTS ${GLAD_C_FILE})
+    message(FATAL_ERROR "Arquivo glad.c não encontrado! 
+Baixe manualmente em https://glad.dav1d.de/ 
+e coloque glad.h em include/glad/ e glad.c em common/")
+endif()
+
+
 if(WIN32)
     set(OPENGL_LIBS opengl32)
 elseif(APPLE)
@@ -77,39 +65,39 @@ else()
     set(OPENGL_LIBS ${OPENGL_gl_LIBRARY})
 endif()
 
-# Verifica se glad.c está presente
-set(GLAD_C_FILE "${CMAKE_SOURCE_DIR}/common/glad.c")
-if (NOT EXISTS ${GLAD_C_FILE})
-    message(FATAL_ERROR "Arquivo glad.c não encontrado! Baixe a GLAD manualmente em https://glad.dav1d.de/ e coloque glad.h em include/glad/ e glad.c em common/")
-endif()
 
-# Gera os executáveis
-foreach(EXERCISE ${EXERCISES})
-    get_filename_component(EXE_NAME ${EXERCISE} NAME)
+file(GLOB_RECURSE GAME_SOURCES
+    "${CMAKE_SOURCE_DIR}/src/GameTest/**/*.cpp"
+)
+add_executable(CatchGame ${GAME_SOURCES} ${GLAD_C_FILE})
+target_include_directories(CatchGame PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/glad
+    ${CMAKE_SOURCE_DIR}/include/glut/include/GL
+    ${glm_SOURCE_DIR}
+    ${stb_image_SOURCE_DIR}
+)
+target_link_libraries(CatchGame
+    glfw
+    ${OPENGL_LIBS}
+    glm::glm
+)
 
-    # Para HelloSprites, adicione explicitamente Sprite.cpp + glad.c
-    if(EXE_NAME STREQUAL "HelloSprites")
-        add_executable(${EXE_NAME}
-            src/${EXERCISE}.cpp          # HelloSprites.cpp
-            src/HelloSprites/Sprite.cpp  # <-- Implementação da classe!
-            ${GLAD_C_FILE}               # GLAD
-        )
-    else()
-        add_executable(${EXE_NAME} src/${EXERCISE}.cpp ${GLAD_C_FILE})
-    endif()
 
-    target_include_directories(${EXE_NAME} PRIVATE 
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/include/glad
-        ${CMAKE_SOURCE_DIR}/include/glut/include/GL  # Se precisar do GLUT
-        ${glm_SOURCE_DIR}
-        ${stb_image_SOURCE_DIR}
-    )
-
-    target_link_libraries(${EXE_NAME}
-        glfw
-        ${OPENGL_LIBS}
-        glm::glm
-        # Descomente se precisar: glut  # Para Windows/Linux
-    )
-endforeach()
+add_executable(HelloSprites
+    src/HelloSprites/HelloSprites.cpp
+    src/HelloSprites/Sprite.cpp
+    ${GLAD_C_FILE}
+)
+target_include_directories(HelloSprites PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+    ${glm_SOURCE_DIR}
+    ${stb_image_SOURCE_DIR}
+)
+target_link_libraries(HelloSprites
+    glfw
+    ${OPENGL_LIBS}
+    glm::glm
+)
