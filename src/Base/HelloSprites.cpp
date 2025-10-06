@@ -25,7 +25,6 @@ using namespace glm;
 #include <stb_image.h>
 
 #include "Sprite.h"
-#include "Background.h"
 
 // Protótipo da função de callback de teclado
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode);
