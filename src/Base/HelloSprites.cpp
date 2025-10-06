@@ -27,6 +27,7 @@
 #include <random>
 #include <string>
 #include <assert.h>
+#include <vector>
 
 using namespace std;
 
@@ -49,6 +50,7 @@ using namespace glm;
 #include <stb_image.h>
 
 #include "Sprite.h"
+#include "Background.h"
 
 // Protótipo da função de callback de teclado
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode);
@@ -58,6 +60,7 @@ int setupShader();
 GLuint loadTexture(string filePath);
 void processInput(Sprite &spr);
 void spriteCreation(Sprite &spr, bool mulherm, GLuint shaderID);
+void backgroundCreation(Sprite &spr, GLuint shaderID);
 bool CheckCollision(Sprite &one, Sprite &two);
 // Dimensões da janela (pode ser alterado em tempo de execução)
 const GLuint WIDTH = 800, HEIGHT = 600;
@@ -151,14 +154,15 @@ int main()
 
 	/*Definindo 2 sprites*/
 
-    Sprite fruta;
+    
 	Sprite mulher;
-
-
+	Sprite background;
+	
 	GLuint shaderID = setupShader();
-	spriteCreation(fruta, false, shaderID);
 	spriteCreation(mulher, true, shaderID);
+	backgroundCreation(background, shaderID);
 
+	vector<Sprite> fruits;
 	//Habilitação do teste de profundidade]
 	glEnable(GL_DEPTH_TEST);
 
@@ -187,8 +191,13 @@ int main()
 
 	// Registrando o nome que o buffer da textura terá no fragment shader
 	glUniform1i(glGetUniformLocation(shaderID, "tex_buffer"), 0);
+	
 	random_device rd;
+
+	double lastSpawnTime = glfwGetTime();
+	double spawnInterval = 1.0 + (rand() % 10)/10.0;
 	// Loop da aplicação - "game loop"
+	
 	while (!glfwWindowShouldClose(window))
 	{
 		// Este trecho de código é totalmente opcional: calcula e mostra a contagem do FPS na barra de título
@@ -217,7 +226,7 @@ int main()
 		processInput(mulher);
 
 		// Limpa o buffer de cor
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // cor de fundo
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f); // cor de fundo
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glLineWidth(10);
@@ -228,31 +237,51 @@ int main()
 		glfwGetFramebufferSize(window, &width, &height);
 		glViewport(0, 0, width, height);
 
-        //Atualizar e desenhar o sprite
-        mulher.update();
-        mulher.draw();
-        fruta.update();
-        fruta.draw();
-		fruta.moveDown();
-		
-
-		/* func*o muito lixo mas que funciona e eh o que eh*/
-		if (fruta.getPosY() == 0){
-			glfwDestroyWindow(window);
-			cout << "Game Over";
-			return 0;
+		double currentTime = glfwGetTime();
+		if (currentTime - lastSpawnTime >= spawnInterval) {
+    		Sprite newFruit;
+    		spriteCreation(newFruit, false, shaderID);  // Cria uma nova fruta com pos aleatória
+    		fruits.push_back(newFruit);
+    		lastSpawnTime = currentTime;
 		}
 
-		bool collision = CheckCollision(fruta, mulher);
-		if (collision){
-			fruta.setPosY(600);
-			mt19937 gen(rd());
-			uniform_int_distribution<> dist(0, 800);
-			int r = dist(gen);
-			fruta.setPosX(r);
-			cout << "contato";
-			
-	}
+        //Atualizar e desenhar o sprite
+		
+        mulher.update();
+        mulher.draw();
+        std::vector<bool> toRemove(fruits.size(), false);
+
+		// Atualize, mova, desenhe e cheque cada fruta
+		bool gameOver = false;
+		for (size_t i = 0; i < fruits.size(); ++i) {
+			fruits[i].update();
+			fruits[i].moveDown();
+			fruits[i].draw();
+
+			// Checa colisão (remove se colidir)
+			if (CheckCollision(fruits[i], mulher)) {
+				toRemove[i] = true;
+				std::cout << "\nContato! Fruta coletada." << std::endl;
+				// Aqui você pode adicionar pontuação, som, etc.
+			} 
+			// Checa se atingiu o fundo (game over)
+			else if (fruits[i].getPosY() <= 0) {
+				gameOver = true;
+			}
+		}
+
+		// Remova as frutas marcadas (de trás para frente para evitar shifts errados)
+		for (int i = static_cast<int>(fruits.size()) - 1; i >= 0; --i) {
+			if (toRemove[i]) {
+				fruits.erase(fruits.begin() + i);
+			}
+		}
+
+		// Game Over se qualquer fruta passou
+		if (gameOver) {
+			std::cout << "\nGame Over" << std::endl;
+			glfwSetWindowShouldClose(window, true);
+		}
 		glBindVertexArray(0); // Desnecessário aqui, pois não há múltiplos VAOs
 
 		// Troca os buffers da tela
@@ -408,8 +437,13 @@ void spriteCreation(Sprite &spr, bool mulher, GLuint shaderID){
 	}
 	else {
 		GLuint texID = loadTexture("../assets/sprites/fruta_spr.png");
-    	spr.initialize(shaderID,texID,1,1,vec3(r,600.0,0.0),vec3(18.0 * 3, 18.0 * 3, 1.0));
+    	spr.initialize(shaderID,texID,1,1,vec3(r,600.0,1.0),vec3(18.0 * 3, 18.0 * 3, 1.0));
 	}
+}
+
+void backgroundCreation(Sprite &spr, GLuint shaderID) {
+    GLuint texID = loadTexture("../assets/sprites/fundo.png");
+    spr.initialize(shaderID, texID, 1, 1, vec3(400.0, 300.0, 0), vec3(800.0, 600.0, 1.0));
 }
 
 bool CheckCollision(Sprite &one, Sprite &two) // AABB - Axis Aligned Bounding Box

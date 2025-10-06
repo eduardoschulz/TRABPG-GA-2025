@@ -93,7 +93,7 @@ void Sprite::moveLeft()
 }
 void Sprite::moveDown()
 {
-	pos.y -= 1;
+	pos.y -= 3.4;
 }
 
 GLuint Sprite::setupGeometry()
