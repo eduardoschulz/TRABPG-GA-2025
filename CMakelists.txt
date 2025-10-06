@@ -66,46 +66,9 @@ else()
 endif()
 
 
-file(GLOB_RECURSE GAME_SOURCES
-    "${CMAKE_SOURCE_DIR}/src/GameTest/**/*.cpp"
-)
-add_executable(CatchGame ${GAME_SOURCES} ${GLAD_C_FILE})
-target_include_directories(CatchGame PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/include/glad
-    ${CMAKE_SOURCE_DIR}/include/glut/include/GL
-    ${glm_SOURCE_DIR}
-    ${stb_image_SOURCE_DIR}
-)
-target_link_libraries(CatchGame
-    glfw
-    ${OPENGL_LIBS}
-    glm::glm
-)
-
-
-add_executable(HelloSprites
-    src/HelloSprites/HelloSprites.cpp
-    src/HelloSprites/Sprite.cpp
-    ${GLAD_C_FILE}
-)
-target_include_directories(HelloSprites PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/include
-    ${glm_SOURCE_DIR}
-    ${stb_image_SOURCE_DIR}
-)
-target_link_libraries(HelloSprites
-    glfw
-    ${OPENGL_LIBS}
-    glm::glm
-)
-
 add_executable(Base
     src/Base/HelloSprites.cpp
     src/Base/Sprite.cpp
-    #src/Base/Background.cpp
     ${GLAD_C_FILE}
 )
 target_include_directories(Base PRIVATE
