@@ -58,6 +58,7 @@ int setupShader();
 GLuint loadTexture(string filePath);
 void processInput(Sprite &spr);
 void spriteCreation(Sprite &spr, bool mulherm, GLuint shaderID);
+bool CheckCollision(Sprite &one, Sprite &two);
 // Dimensões da janela (pode ser alterado em tempo de execução)
 const GLuint WIDTH = 800, HEIGHT = 600;
 
@@ -242,16 +243,15 @@ int main()
 			return 0;
 		}
 
-
-		if (fruta.getPosY() == mulher.getPosY() + 60){
-			if (fruta.getPosX() <= mulher.getPosX() + 50  && fruta.getPosX() >= mulher.getPosX() - 50){
-				fruta.setPosY(600);
-				mt19937 gen(rd());
-				uniform_int_distribution<> dist(0, 800);
-				int r = dist(gen);
-				fruta.setPosX(r);
-				cout << "contato";
-			}
+		bool collision = CheckCollision(fruta, mulher);
+		if (collision){
+			fruta.setPosY(600);
+			mt19937 gen(rd());
+			uniform_int_distribution<> dist(0, 800);
+			int r = dist(gen);
+			fruta.setPosX(r);
+			cout << "contato";
+			
 	}
 		glBindVertexArray(0); // Desnecessário aqui, pois não há múltiplos VAOs
 
@@ -394,8 +394,7 @@ void processInput(Sprite &spr)
 /*Criacao de Sprite*/
 
 void spriteCreation(Sprite &spr, bool mulher, GLuint shaderID){
-
-//	GLuint shaderID = setupShader();
+	//	GLuint shaderID = setupShader();
     random_device rd;   // fonte de entropia real (se o sistema suportar)
     mt19937 gen(rd());  // Mersenne Twister (gerador de alta qualidade)
     uniform_int_distribution<> dist(0, 800);
@@ -412,3 +411,16 @@ void spriteCreation(Sprite &spr, bool mulher, GLuint shaderID){
     	spr.initialize(shaderID,texID,1,1,vec3(r,600.0,0.0),vec3(18.0 * 3, 18.0 * 3, 1.0));
 	}
 }
+
+bool CheckCollision(Sprite &one, Sprite &two) // AABB - Axis Aligned Bounding Box
+{
+	// Collision x-axis?
+	bool collisionX = one.getPosX() + 50 >= two.getPosX() &&
+					  two.getPosX() + 50 >= one.getPosX();
+	// Collision y-axis?
+	bool collisionY = one.getPosY() + 50 >= two.getPosY() &&
+					  two.getPosY() + 50 >= one.getPosY();
+	// Collision only if on both axes
+	return collisionX && collisionY;
+}
+
