@@ -8,6 +8,23 @@ Sprite::~Sprite()
 {
 }
 
+int Sprite::getPosY(){
+	return pos.y;
+}
+
+int Sprite::getPosX(){
+	return pos.x;
+}
+
+void Sprite::setPosY(int y){
+	this->pos.y = y;
+}
+
+void Sprite::setPosX(int x){
+	this->pos.x = x;
+}
+
+
 void Sprite::initialize(GLuint shaderID, GLuint texID, int nAnimations, int nFrames, vec3 pos, vec3 dimensions, float angle)
 {
     this->shaderID = shaderID;
@@ -60,14 +77,23 @@ void Sprite::draw()
 
 void Sprite::moveRight()
 {
+	if (pos.x < 799){
 	pos.x += vel;
-	iAnimations = 3;
+	iAnimations = 3;}
+
 }
 
 void Sprite::moveLeft()
 {
-	pos.x -= vel;
-	iAnimations = 2;
+	if (pos.x > 1)
+	{
+		pos.x -= vel;
+		iAnimations = 2;
+	}
+}
+void Sprite::moveDown()
+{
+	pos.y -= 1;
 }
 
 GLuint Sprite::setupGeometry()

@@ -24,6 +24,7 @@
  */
 
 #include <iostream>
+#include <random>
 #include <string>
 #include <assert.h>
 
@@ -185,7 +186,7 @@ int main()
 
 	// Registrando o nome que o buffer da textura terá no fragment shader
 	glUniform1i(glGetUniformLocation(shaderID, "tex_buffer"), 0);
-	
+	random_device rd;
 	// Loop da aplicação - "game loop"
 	while (!glfwWindowShouldClose(window))
 	{
@@ -231,7 +232,26 @@ int main()
         mulher.draw();
         fruta.update();
         fruta.draw();
+		fruta.moveDown();
+		
+		int posy = fruta.getPosY();
+		/* func*o muito lixo mas que funciona e eh o que eh*/
+		if (fruta.getPosY() == 0){
+			glfwDestroyWindow(window);
+			cout << "Game Over";
+			return 0;
+		}
 
+		if (fruta.getPosY() == mulher.getPosY() + 60){
+			if (fruta.getPosX() <= mulher.getPosX() + 50 || fruta.getPosX() >= mulher.getPosX() - 50){
+				fruta.setPosY(600);
+				mt19937 gen(rd());
+				uniform_int_distribution<> dist(0, 800);
+				int r = dist(gen);
+				fruta.setPosX(r);
+				cout << "contato";
+			}
+	}
 		glBindVertexArray(0); // Desnecessário aqui, pois não há múltiplos VAOs
 
 		// Troca os buffers da tela
@@ -375,13 +395,19 @@ void processInput(Sprite &spr)
 void spriteCreation(Sprite &spr, bool mulher, GLuint shaderID){
 
 //	GLuint shaderID = setupShader();
+    random_device rd;   // fonte de entropia real (se o sistema suportar)
+    mt19937 gen(rd());  // Mersenne Twister (gerador de alta qualidade)
+    uniform_int_distribution<> dist(0, 800);
+
+    int r = dist(gen);
+
 
 	if (mulher){
 		GLuint texID = loadTexture("../assets/sprites/pessoa_spr.png");
-    	spr.initialize(shaderID,texID,4,3,vec3(400.0,300.0,0.0),vec3(24.0 * 3, 32.0 * 3, 1.0));
+    	spr.initialize(shaderID,texID,4,3,vec3(400.0,100.0,0.0),vec3(24.0 * 3, 32.0 * 3, 1.0));
 	}
 	else {
 		GLuint texID = loadTexture("../assets/sprites/fruta_spr.png");
-    	spr.initialize(shaderID,texID,4,3,vec3(400.0,300.0,0.0),vec3(24.0 * 3, 32.0 * 3, 1.0));
+    	spr.initialize(shaderID,texID,1,1,vec3(r,600.0,0.0),vec3(18.0 * 3, 18.0 * 3, 1.0));
 	}
 }

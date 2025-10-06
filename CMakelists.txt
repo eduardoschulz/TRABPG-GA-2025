@@ -101,3 +101,20 @@ target_link_libraries(HelloSprites
     ${OPENGL_LIBS}
     glm::glm
 )
+
+add_executable(Base
+    src/Base/HelloSprites.cpp
+    src/Base/Sprite.cpp
+    ${GLAD_C_FILE}
+)
+target_include_directories(Base PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+    ${glm_SOURCE_DIR}
+    ${stb_image_SOURCE_DIR}
+)
+target_link_libraries(Base
+    glfw
+    ${OPENGL_LIBS}
+    glm::glm
+)

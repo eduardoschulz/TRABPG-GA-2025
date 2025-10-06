@@ -36,6 +36,11 @@ public:
     void draw();
     void moveRight();
     void moveLeft();
+    void moveDown();
+    int getPosY();  // Getter for Y position
+    int getPosX();  // Getter for Y position
+    void setPosY(int y);
+    void setPosX(int x);
 
 private:
     GLuint VAO;        // id do VAO da geometria
