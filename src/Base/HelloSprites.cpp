@@ -108,10 +108,7 @@ int main()
 	for (int i =0; i < 1024; i++) { keys[i] = false; }
 
 	// Compilando e buildando o programa de shader
-
-	/*Definindo 2 sprites*/
-
-    
+   
 	Sprite mulher;
 	Sprite background;
 

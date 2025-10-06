@@ -38,7 +38,7 @@ void Sprite::initialize(GLuint shaderID, GLuint texID, int nAnimations, int nFra
     this->angle = angle;
 	this->nAnimations = nAnimations;
 	this->nFrames = nFrames;
-	this->iAnimations = 1; //animação inicial (parado olhando para frente)
+	this->iAnimations = 1; //animação inicial
 	this->iFrames = 0; //frame inicial
 	this->d.s = 1.0 / (float) nFrames;
 	this->d.t = 1.0 / (float) nAnimations;
@@ -48,17 +48,19 @@ void Sprite::initialize(GLuint shaderID, GLuint texID, int nAnimations, int nFra
     this->VAO = setupGeometry();
 }
 
+// Atualiza o estado do sprite, incluindo matriz de transformação e animação.
 void Sprite::update()
 {
+	// Cria matriz de modelo com transformação de translação e escala.
     mat4 model = mat4(1); 
     model = translate(model,pos);
 	model = scale(model,dimensions);
 	// Mandar a matriz de modelo para o shader
 	glUniformMatrix4fv(glGetUniformLocation(shaderID, "model"),1,GL_FALSE,value_ptr(model));
-
+	// Calcula deslocamento de textura com base no quadro e animação atuais.
 	vec2 offsetTex = vec2(iFrames*d.s,iAnimations * d.t);
 	glUniform2f(glGetUniformLocation(shaderID, "offsetTex"),offsetTex.s,offsetTex.t);
-
+	// Atualiza quadro de animação com base no tempo decorrido.
 	float now = glfwGetTime();
 	float dt = now - lastTime;
 
@@ -70,6 +72,7 @@ void Sprite::update()
 
 }
 
+// Renderiza o sprite na tela, aplicando textura e transformações.
 void Sprite::draw()
 {
     glBindVertexArray(VAO); // Conectando ao buffer de geometria
@@ -96,20 +99,22 @@ void Sprite::draw()
 
 void Sprite::moveRight()
 {
-	if (pos.x < 799){
+	if (pos.x < 799){// Limita movimento à borda direita da janela.
 	pos.x += vel;
-	iAnimations = 3;}
+	iAnimations = 3;}// Define animação de movimento para a direita.
 
 }
 
 void Sprite::moveLeft()
 {
-	if (pos.x > 1)
+	if (pos.x > 1)// Limita movimento à borda esquerda da janela.
 	{
 		pos.x -= vel;
-		iAnimations = 2;
+		iAnimations = 2;// Define animação de movimento para a esquerda.
 	}
 }
+
+// Move o sprite para baixo com velocidade fixa. Usado para as frutas
 void Sprite::moveDown()
 {
 	pos.y -= 3.4;
@@ -124,10 +129,10 @@ GLuint Sprite::setupGeometry()
 	GLfloat vertices[] = {
 		// x   y     z    s     		t
 		// T0
-		-0.5, -0.5, 0.0, 0.0, 0.0, // V0
-		-0.5, 0.5, 0.0, 0.0, d.t,  // V1
-		0.5, -0.5, 0.0, d.s, 0.0,  // V2
-		0.5, 0.5, 0.0, d.s, d.t	   // V3
+		-0.5, -0.5, 0.0, 0.0, 0.0, // V0 inferior esquerdo
+		-0.5, 0.5, 0.0, 0.0, d.t,  // V1 superior esquerdo
+		0.5, -0.5, 0.0, d.s, 0.0,  // V2 inferior direito
+		0.5, 0.5, 0.0, d.s, d.t	   // V3 inferior esquerdo
 
 	};
 
