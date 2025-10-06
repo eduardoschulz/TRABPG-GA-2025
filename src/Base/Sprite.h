@@ -41,6 +41,7 @@ public:
     int getPosX();  // Getter for Y position
     void setPosY(int y);
     void setPosX(int x);
+    void setD(float s, float t);
 
 private:
     GLuint VAO;        // id do VAO da geometria
@@ -51,7 +52,6 @@ private:
     GLuint shaderID;   // shader usado
     int nAnimations, nFrames, iAnimations, iFrames;
     vec2 d;
-
     float lastTime, FPS;
     float vel;
 

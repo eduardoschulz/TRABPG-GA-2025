@@ -1,28 +1,3 @@
-/*
- * Hello Triangle - Código adaptado de:
- *   - https://learnopengl.com/#!Getting-started/Hello-Triangle
- *   - https://antongerdelan.net/opengl/glcontext2.html
- *
- * Adaptado por: Rossana Baptista Queiroz
- *
- * Disciplinas:
- *   - Processamento Gráfico (Ciência da Computação - Híbrido)
- *   - Processamento Gráfico: Fundamentos (Ciência da Computação - Presencial)
- *   - Fundamentos de Computação Gráfica (Jogos Digitais)
- *
- * Descrição:
- *   Este código é o "Olá Mundo" da Computação Gráfica, utilizando OpenGL Moderna.
- *   No pipeline programável, o desenvolvedor pode implementar as etapas de
- *   Processamento de Geometria e Processamento de Pixel utilizando shaders.
- *   Um programa de shader precisa ter, obrigatoriamente, um Vertex Shader e um Fragment Shader,
- *   enquanto outros shaders, como o de geometria, são opcionais.
- *
- * Histórico:
- *   - Versão inicial: 07/04/2017
- *   - Última atualização: 18/03/2025
- *
- */
-
 #include <iostream>
 #include <random>
 #include <string>
@@ -59,43 +34,42 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 int setupShader();
 GLuint loadTexture(string filePath);
 void processInput(Sprite &spr);
-void spriteCreation(Sprite &spr, bool mulherm, GLuint shaderID);
-void backgroundCreation(Sprite &spr, GLuint shaderID);
+void spriteCreation(Sprite &spr, int tipo, GLuint shaderID);
 bool CheckCollision(Sprite &one, Sprite &two);
+
+
 // Dimensões da janela (pode ser alterado em tempo de execução)
 const GLuint WIDTH = 800, HEIGHT = 600;
 
 // Código fonte do Vertex Shader (em GLSL): ainda hardcoded
-const GLchar *vertexShaderSource = R"glsl(
- #version 400
- layout (location = 0) in vec3 position;
- layout (location = 1) in vec2 texc;
- out vec2 tex_coord; 
- uniform mat4 projection;
- uniform mat4 model;
- void main()
- {
-	 gl_Position = projection * model * vec4(position.x, position.y, position.z, 1.0);
-	 tex_coord = vec2(texc.s,1.0-texc.t);
- }
- )glsl";
+// Código fonte do Vertex Shader (em GLSL): ainda hardcoded
+const GLchar *vertexShaderSource = "#version 400\n"
+								   "layout (location = 0) in vec3 position;\n"
+								   "layout (location = 1) in vec2 texc;\n"
+								   "uniform mat4 projection;\n"
+								   "uniform mat4 model;\n"
+								   "out vec2 texCoord;\n"
+								   "void main()\n"
+								   "{\n"
+								   //...pode ter mais linhas de código aqui!
+								   "gl_Position = projection * model * vec4(position.x, position.y, position.z, 1.0);\n"
+								   "texCoord = vec2(texc.s, 1.0 - texc.t);\n"
+								   "}\0";
 
-// Código fonte do Fragment Shader (em GLSL): ainda hardcoded
-const GLchar *fragmentShaderSource = R"glsl(
- #version 400
- in vec2 tex_coord;
- out vec4 color;
+// Códifo fonte do Fragment Shader (em GLSL): ainda hardcoded
+const GLchar *fragmentShaderSource = "#version 400\n"
+									 "in vec2 texCoord;\n"
+									 "uniform sampler2D texBuffer;\n"
+									 "uniform vec2 offsetTex;\n"
+									 "out vec4 color;\n"
+									 "void main()\n"
+									 "{\n"
+									 "color = texture(texBuffer, texCoord + offsetTex);\n"
+									 "}\n\0";
 
-uniform sampler2D tex_buffer;
-uniform vec2 offsetTex;
-
- void main()
- {
-	 color = texture(tex_buffer,tex_coord+offsetTex);
- }
- )glsl";
 
 bool keys[1024];
+int score = 0;
 
 
 // Função MAIN
@@ -104,28 +78,11 @@ int main()
 	// Inicialização da GLFW
 	glfwInit();
 
-	// Muita atenção aqui: alguns ambientes não aceitam essas configurações
-	// Você deve adaptar para a versão do OpenGL suportada por sua placa
-	// Sugestão: comente essas linhas de código para desobrir a versão e
-	// depois atualize (por exemplo: 4.5 com 4 e 5)
-	 //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	 //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-	 //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-	 //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-	// Ativa a suavização de serrilhado (MSAA) com 8 amostras por pixel
-	// glfwWindowHint(GLFW_SAMPLES, 8);
-
-	// Essencial para computadores da Apple
-	// #ifdef __APPLE__
-	//	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-	// #endif
-
 	// Criação da janela GLFW
 	GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "Ola Triangulo! -- Rossana", nullptr, nullptr);
 	if (!window)
 	{
-		std::cerr << "Falha ao criar a janela GLFW" << std::endl;
+		cerr << "Falha ao criar a janela GLFW" << endl;
 		glfwTerminate();
 		return -1;
 	}
@@ -137,7 +94,7 @@ int main()
 	// GLAD: carrega todos os ponteiros d funções da OpenGL
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
-		std::cerr << "Falha ao inicializar GLAD" << std::endl;
+		cerr << "Falha ao inicializar GLAD" << endl;
 		return -1;
 	}
 
@@ -157,10 +114,12 @@ int main()
     
 	Sprite mulher;
 	Sprite background;
-	
+
+
 	GLuint shaderID = setupShader();
-	spriteCreation(mulher, true, shaderID);
-	backgroundCreation(background, shaderID);
+	spriteCreation(mulher, 1, shaderID);
+
+	spriteCreation(background, 3, shaderID);
 
 	vector<Sprite> fruits;
 	//Habilitação do teste de profundidade]
@@ -189,6 +148,7 @@ int main()
 	// Ativar o primeiro buffer de textura do OpenGL
 	glActiveTexture(GL_TEXTURE0);
 
+	
 	// Registrando o nome que o buffer da textura terá no fragment shader
 	glUniform1i(glGetUniformLocation(shaderID, "tex_buffer"), 0);
 	
@@ -228,6 +188,7 @@ int main()
 		// Limpa o buffer de cor
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f); // cor de fundo
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		background.draw();
 
 		glLineWidth(10);
 		glPointSize(20);
@@ -240,7 +201,7 @@ int main()
 		double currentTime = glfwGetTime();
 		if (currentTime - lastSpawnTime >= spawnInterval) {
     		Sprite newFruit;
-    		spriteCreation(newFruit, false, shaderID);  // Cria uma nova fruta com pos aleatória
+    		spriteCreation(newFruit, 2, shaderID);  // Cria uma nova fruta com pos aleatória
     		fruits.push_back(newFruit);
     		lastSpawnTime = currentTime;
 		}
@@ -249,7 +210,7 @@ int main()
 		
         mulher.update();
         mulher.draw();
-        std::vector<bool> toRemove(fruits.size(), false);
+        vector<bool> toRemove(fruits.size(), false);
 
 		// Atualize, mova, desenhe e cheque cada fruta
 		bool gameOver = false;
@@ -261,7 +222,9 @@ int main()
 			// Checa colisão (remove se colidir)
 			if (CheckCollision(fruits[i], mulher)) {
 				toRemove[i] = true;
-				std::cout << "\nContato! Fruta coletada." << std::endl;
+				score++;
+				cout << "\nContato! Fruta coletada. Score: " << endl;
+				cout << score;
 				// Aqui você pode adicionar pontuação, som, etc.
 			} 
 			// Checa se atingiu o fundo (game over)
@@ -279,7 +242,7 @@ int main()
 
 		// Game Over se qualquer fruta passou
 		if (gameOver) {
-			std::cout << "\nGame Over" << std::endl;
+			cout << "\nGame Over" << endl;
 			glfwSetWindowShouldClose(window, true);
 		}
 		glBindVertexArray(0); // Desnecessário aqui, pois não há múltiplos VAOs
@@ -329,8 +292,8 @@ int setupShader()
 	if (!success)
 	{
 		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
-				  << infoLog << std::endl;
+		cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
+				  << infoLog << endl;
 	}
 	// Fragment shader
 	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -341,8 +304,8 @@ int setupShader()
 	if (!success)
 	{
 		glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
-				  << infoLog << std::endl;
+		cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
+				  << infoLog << endl;
 	}
 	// Linkando os shaders e criando o identificador do programa de shader
 	GLuint shaderProgram = glCreateProgram();
@@ -354,8 +317,8 @@ int setupShader()
 	if (!success)
 	{
 		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
-				  << infoLog << std::endl;
+		cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
+				  << infoLog << endl;
 	}
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
@@ -398,7 +361,7 @@ GLuint loadTexture(string filePath)
 	}
 	else
 	{
-		std::cout << "Failed to load texture" << std::endl;
+		cout << "Failed to load texture" << endl;
 	}
 
 	// Liberar o data e desconectar a textura
@@ -422,7 +385,7 @@ void processInput(Sprite &spr)
 
 /*Criacao de Sprite*/
 
-void spriteCreation(Sprite &spr, bool mulher, GLuint shaderID){
+void spriteCreation(Sprite &spr, int tipo, GLuint shaderID){
 	//	GLuint shaderID = setupShader();
     random_device rd;   // fonte de entropia real (se o sistema suportar)
     mt19937 gen(rd());  // Mersenne Twister (gerador de alta qualidade)
@@ -431,20 +394,20 @@ void spriteCreation(Sprite &spr, bool mulher, GLuint shaderID){
     int r = dist(gen);
 
 
-	if (mulher){
+	if (tipo == 1){
 		GLuint texID = loadTexture("../assets/sprites/pessoa_spr.png");
-    	spr.initialize(shaderID,texID,4,3,vec3(400.0,100.0,0.0),vec3(24.0 * 3, 32.0 * 3, 1.0));
+    	spr.initialize(shaderID,texID,4,3,vec3(400.0,100.0,1.0),vec3(24.0 * 3, 32.0 * 3, 1.0));
 	}
-	else {
+	else if (tipo == 2){
 		GLuint texID = loadTexture("../assets/sprites/fruta_spr.png");
     	spr.initialize(shaderID,texID,1,1,vec3(r,600.0,1.0),vec3(18.0 * 3, 18.0 * 3, 1.0));
 	}
+	else{
+		GLuint texID = loadTexture("../assets/sprites/fundo_2.png");
+		spr.initialize(shaderID,texID,1,1,vec3(400.0,300.0,0.0),vec3(800.0, 600.0, 1.0));
+	}
 }
 
-void backgroundCreation(Sprite &spr, GLuint shaderID) {
-    GLuint texID = loadTexture("../assets/sprites/fundo.png");
-    spr.initialize(shaderID, texID, 1, 1, vec3(400.0, 300.0, 0), vec3(800.0, 600.0, 1.0));
-}
 
 bool CheckCollision(Sprite &one, Sprite &two) // AABB - Axis Aligned Bounding Box
 {

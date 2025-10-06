@@ -24,6 +24,10 @@ void Sprite::setPosX(int x){
 	this->pos.x = x;
 }
 
+void Sprite::setD(float s, float t){
+	this->d.s = s;
+	this->d.t = t;
+}
 
 void Sprite::initialize(GLuint shaderID, GLuint texID, int nAnimations, int nFrames, vec3 pos, vec3 dimensions, float angle)
 {
@@ -69,10 +73,25 @@ void Sprite::update()
 void Sprite::draw()
 {
     glBindVertexArray(VAO); // Conectando ao buffer de geometria
-	glBindTexture(GL_TEXTURE_2D, texID); //Conectando ao buffer de textura
-    // Chamada de desenho - drawcall
-	// Poligono Preenchido - GL_TRIANGLE_STRIP
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 6);
+
+	glBindTexture(GL_TEXTURE_2D, texID); // conectando o buffer de textura
+
+	// Matriz de modelo - Tranformações na geometria, nos objetos
+	mat4 model = mat4(1); // matriz identidade
+	// Translação
+	model = translate(model, pos);
+	// Rotação
+	model = rotate(model, radians(angle), vec3(0.0, 0.0, 1.0));
+	// Escala
+	model = scale(model, dimensions);
+	// Enviar para o shader
+	glUniformMatrix4fv(glGetUniformLocation(shaderID, "model"), 1, GL_FALSE, value_ptr(model));
+
+	// Chamada de desenho - drawcall
+	// Poligono Preenchido - GL_TRIANGLES
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+	glBindVertexArray(0); // Desconectando o buffer de geometria
 }
 
 void Sprite::moveRight()
@@ -103,11 +122,13 @@ GLuint Sprite::setupGeometry()
 	// Cada atributo do vértice (coordenada, cores, coordenadas de textura, normal, etc)
 	// Pode ser arazenado em um VBO único ou em VBOs separados
 	GLfloat vertices[] = {
-		// x   y     z    s   t
-		-0.5,  0.5 , 0.0, 0.0, d.t,	// v0
-		-0.5, -0.5 , 0.0, 0.0, 0.0,	// v1
-		 0.5,  0.5 , 0.0, d.s, d.t,	// v2
-         0.5, -0.5 , 0.0, d.s, 0.0	// v3
+		// x   y     z    s     		t
+		// T0
+		-0.5, -0.5, 0.0, 0.0, 0.0, // V0
+		-0.5, 0.5, 0.0, 0.0, d.t,  // V1
+		0.5, -0.5, 0.0, d.s, 0.0,  // V2
+		0.5, 0.5, 0.0, d.s, d.t	   // V3
+
 	};
 
 	GLuint VBO;
