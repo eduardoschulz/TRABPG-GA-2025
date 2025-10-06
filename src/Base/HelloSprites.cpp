@@ -234,7 +234,7 @@ int main()
         fruta.draw();
 		fruta.moveDown();
 		
-		int posy = fruta.getPosY();
+
 		/* func*o muito lixo mas que funciona e eh o que eh*/
 		if (fruta.getPosY() == 0){
 			glfwDestroyWindow(window);
@@ -242,8 +242,9 @@ int main()
 			return 0;
 		}
 
+
 		if (fruta.getPosY() == mulher.getPosY() + 60){
-			if (fruta.getPosX() <= mulher.getPosX() + 50 || fruta.getPosX() >= mulher.getPosX() - 50){
+			if (fruta.getPosX() <= mulher.getPosX() + 50  && fruta.getPosX() >= mulher.getPosX() - 50){
 				fruta.setPosY(600);
 				mt19937 gen(rd());
 				uniform_int_distribution<> dist(0, 800);
